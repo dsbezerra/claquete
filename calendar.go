@@ -3,7 +3,6 @@ package claquete
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -80,17 +79,10 @@ func getCalendar(month time.Month, year int) (*Calendar, error) {
 							}
 						}
 						ss.Find("a").EachWithBreak(func(i int, s *goquery.Selection) bool {
-							href := s.AttrOr("href", "")
-							// http://claquete.com.br/12240/super-bowl-liii.html
-							// Retrive number between 'http://claquete.com.br/' and '/super-bowl-liii.html'
-							if end := strings.LastIndex(href, "/"); end > -1 {
-								if start := strings.LastIndex(href[0:end], "/"); start > -1 {
-									ID, err := strconv.Atoi(href[start+1 : end])
-									if err == nil {
-										movie.ID = ID
-										return false
-									}
-								}
+							ID, err := movieutil.IDFromURLString(s.AttrOr("href", ""))
+							if err == nil {
+								movie.ID = ID
+								return false
 							}
 							return true
 						})

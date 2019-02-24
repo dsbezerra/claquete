@@ -36,13 +36,11 @@ func IDFromURL(URL *url.URL) (int, error) {
 	u := URL.String()
 	if strings.Contains(u, "/filmes/filme.php?cf=") {
 		cf := URL.Query().Get("cf")
-		if cf != "" {
-			value, err := strconv.Atoi(cf)
-			if err != nil {
-				err = errors.Wrapf(err, "conversion of cf's value %s to integer failed", cf)
-			} else {
-				ID = value
-			}
+		value, err := strconv.Atoi(cf)
+		if err != nil {
+			err = errors.Wrapf(err, "conversion of cf's value %s to integer failed", cf)
+		} else {
+			ID = value
 		}
 	} else {
 		r := reNumbersBetweenSlashes.FindStringSubmatch(u)
@@ -53,6 +51,8 @@ func IDFromURL(URL *url.URL) (int, error) {
 			} else {
 				ID = value
 			}
+		} else {
+			err = errors.New("couldn't find number sequence in this URL")
 		}
 	}
 
