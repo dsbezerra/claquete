@@ -1,6 +1,8 @@
 package claquete
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 )
 
@@ -32,4 +34,13 @@ func TestGetShowtimes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, but got error: %s", err.Error())
 	}
+
+	s, err := GetCinemaShowtimes(818)
+	if err != nil {
+		t.Fatalf("expected no error, but got error: %s", err.Error())
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	enc.Encode(s)
 }

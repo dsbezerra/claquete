@@ -83,12 +83,15 @@ func BreakBySpaces(str string) (string, string) {
 	return BreakByToken(str, ' ')
 }
 
-func StringToTime(str, sep string) (*time.Time, error) {
+// StringToTime ...
+func StringToTime(str, sep string, loc *time.Location) (*time.Time, error) {
+	if loc == nil {
+		loc, _ = time.LoadLocation("America/Sao_Paulo")
+	}
+
 	var result time.Time
 	var err error
-
 	var d, m, y int
-	loc, _ := time.LoadLocation("America/Sao_Paulo")
 
 	parts := strings.Split(str, sep)
 	size := len(parts)

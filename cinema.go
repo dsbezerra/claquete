@@ -70,8 +70,6 @@ type (
 		Version    string     `json:"version"`
 		StartTime  *time.Time `json:"opening_time"`
 		Room       int        `json:"room"`
-		Weekday    int        `json:"weekday"`
-		Period     Period     `json:"period"`
 		VIP        bool       `json:"vip"`
 		XD         bool       `json:"xd"`
 		IMAX       bool       `json:"imax"`
@@ -80,7 +78,8 @@ type (
 	// NoteMap TODO
 	NoteMap struct {
 		sync.RWMutex
-		m map[string]Note
+		m   map[string]Note
+		loc *time.Location
 	}
 
 	// Note TODO
@@ -158,23 +157,28 @@ func GetCinemaShowtimes(id int) ([]Showtime, error) {
 		return nil, fmt.Errorf("couldn't create ID from integer %d", id)
 	}
 
+	var loc *time.Location
 	var period Period
 	var result []Showtime
 	var err error
 
 	exceptOnlyMap := &NoteMap{m: make(map[string]Note)}
-
 	container := fmt.Sprintf("body > div.conteudo > div.progrb > div.cinema%d", id)
 
 	c := NewClaquete()
+	// Try to retrieve time zone
+	c.collector.OnHTML("body > div.conteudo > div.progrb > div:nth-child(1) > p", func(e *colly.HTMLElement) {
+		text := strings.TrimSpace(strings.Replace(e.Text, "por cinemas em", "", -1))
+		if text != "" { // Expected state name
+			loc, _ = time.LoadLocation(getTimeZone(text))
+			exceptOnlyMap.loc = loc
+		}
+	})
 	c.collector.OnHTML(container, func(e *colly.HTMLElement) {
 		periods := e.DOM.Find("h4 > strong")
 		if periods.Length() == 2 {
-			st := util.GetText("", periods.First())
-			et := util.GetText("", periods.Last())
-			start, _ := util.StringToTime(st, "/")
-			end, _ := util.StringToTime(et, "/")
-
+			start, _ := util.StringToTime(util.GetText("", periods.First()), "/", loc)
+			end, _ := util.StringToTime(util.GetText("", periods.Last()), "/", loc)
 			if start != nil && end != nil {
 				period.Start = *start
 				period.End = *end
@@ -228,8 +232,7 @@ func GetCinemaShowtimes(id int) ([]Showtime, error) {
 				MovieID:    idMovie,
 				MovieTitle: title,
 				Room:       room,
-				Version:    Format2D,
-				Period:     period,
+				Format:     Format2D,
 			}
 
 			s.Find("div.icons div").Each(func(i int, s *goquery.Selection) {
@@ -303,7 +306,7 @@ func GetCinemaShowtimes(id int) ([]Showtime, error) {
 						if n.Type == NoteOnlyDayX {
 							for _, day := range n.Days {
 								y, m, d := day.Date()
-								st := time.Date(y, m, d, hours, minutes, 0, 0, day.Location())
+								st := time.Date(y, m, d, hours, minutes, 0, 0, loc)
 								s.StartTime = &st
 								result = append(result, s)
 							}
@@ -446,7 +449,7 @@ func fillExceptOnlyMap(nm *NoteMap, s *goquery.Selection) {
 
 						res := PeriodExp.FindStringSubmatch(date)
 						if len(res) == 2 {
-							d, err := util.StringToTime(res[1], "/")
+							d, err := util.StringToTime(res[1], "/", nm.loc)
 							if err != nil {
 								fmt.Printf("Failed to create date from text '%s'\n", res[1])
 							} else {
