@@ -187,7 +187,7 @@ func (c *City) GetNowPlaying() ([]Movie, error) {
 
 // GetCities for current claquete's federative unit
 func (c *Claquete) GetCities() ([]City, error) {
-	s := &State{c: c, FU: c.FederativeUnit}
+	s := &State{c: c, FU: c.fu, Name: getStateName(c.fu)}
 	return s.GetCities()
 }
 
@@ -198,6 +198,66 @@ func GetCities(fu string) ([]City, error) {
 	return c.GetCities()
 }
 
+func getStateName(s string) string {
+	switch s {
+	case AC:
+		return Acre
+	case AL:
+		return Alagoas
+	case AM:
+		return Amazonas
+	case AP:
+		return Amapa
+	case BA:
+		return Bahia
+	case CE:
+		return Ceara
+	case DF:
+		return DistritoFederal
+	case ES:
+		return EspiritoSanto
+	case GO:
+		return Goias
+	case MA:
+		return Maranhao
+	case MG:
+		return MinasGerais
+	case MS:
+		return MatoGrossoSul
+	case MT:
+		return MatoGrosso
+	case PA:
+		return Para
+	case PB:
+		return Paraiba
+	case PE:
+		return Pernambuco
+	case PI:
+		return Piaui
+	case PR:
+		return Parana
+	case RJ:
+		return RioJaneiro
+	case RN:
+		return RioGrandeNorte
+	case RO:
+		return Rondonia
+	case RR:
+		return Roraima
+	case RS:
+		return RioGrandeSul
+	case SC:
+		return SantaCatarina
+	case SE:
+		return Sergipe
+	case SP:
+		return SaoPaulo
+	case TO:
+		return Tocantins
+	default:
+		return ""
+	}
+}
 func getTimeZone(s string) string {
 	result := "America/Sao_Paulo"
 

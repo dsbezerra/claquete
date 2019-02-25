@@ -18,18 +18,20 @@ const (
 	BaseAJAX = BaseURL + "/lib/ajax/ajax."
 )
 
+// Options ...
+type Options func(*Claquete)
+
 type (
 	// Claquete struct
 	Claquete struct {
-		FederativeUnit string
-		CityName       string
-
+		fu        string
+		city      string
 		collector *colly.Collector
 	}
 )
 
 // NewClaquete creates a new Claquete instance
-func NewClaquete(options ...func(*Claquete)) *Claquete {
+func NewClaquete(options ...Options) *Claquete {
 	c := &Claquete{}
 	c.Init()
 
@@ -37,7 +39,7 @@ func NewClaquete(options ...func(*Claquete)) *Claquete {
 		f(c)
 	}
 
-	if c.FederativeUnit != "" {
+	if c.fu != "" {
 		// Make sure we got the cookies
 		c.GetCities()
 	}
@@ -58,7 +60,7 @@ func FederativeUnit(fu string) func(*Claquete) {
 		log.Fatal(fmt.Errorf("federative unit %s is invalid", fu))
 	}
 	return func(c *Claquete) {
-		c.FederativeUnit = fu
+		c.fu = fu
 	}
 }
 
@@ -68,7 +70,7 @@ func CityName(city string) func(*Claquete) {
 		log.Fatal(errors.New("city name is invalid"))
 	}
 	return func(c *Claquete) {
-		c.CityName = city
+		c.city = city
 	}
 }
 
